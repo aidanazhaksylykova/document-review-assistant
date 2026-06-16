@@ -3,66 +3,429 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ассистент проверки документов</title>
+<title>DocCheck — Ассистент проверки документов</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-  .card { background: white; border-radius: 16px; max-width: 680px; width: 100%; padding: 2.5rem; border: 1px solid #e5e5e3; }
-  .badge { display: inline-block; font-size: 11px; font-weight: 500; color: #3b7d4e; background: #eaf4ee; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; margin-bottom: 1.5rem; }
-  h1 { font-size: 22px; font-weight: 500; color: #1a1a1a; margin-bottom: 8px; line-height: 1.3; }
-  .subtitle { font-size: 14px; color: #666; margin-bottom: 2rem; line-height: 1.6; }
-  .steps { margin-bottom: 2rem; }
-  .step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
-  .step-num { width: 26px; height: 26px; border-radius: 50%; background: #f0f0ee; font-size: 12px; font-weight: 500; color: #555; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-  .step-text { font-size: 14px; color: #333; line-height: 1.5; padding-top: 3px; }
-  .step-text a { color: #1a6ef5; text-decoration: none; }
-  .step-text a:hover { text-decoration: underline; }
-  .step-text b { font-weight: 500; color: #1a1a1a; }
-  .prompt-box { background: #f8f8f6; border: 1px solid #e5e5e3; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .prompt-label { font-size: 11px; font-weight: 500; color: #999; letter-spacing: 0.08em; margin-bottom: 10px; }
-  .prompt-text { font-size: 12px; color: #444; line-height: 1.7; max-height: 180px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; font-family: inherit; }
-  .btn { width: 100%; padding: 13px; background: #1a1a1a; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s, transform 0.1s; }
-  .btn:hover { background: #333; }
-  .btn:active { transform: scale(0.99); }
-  .btn.copied { background: #3b7d4e; }
-  .divider { border: none; border-top: 1px solid #e5e5e3; margin: 1.5rem 0; }
-  .open-link { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #1a6ef5; font-size: 14px; font-weight: 500; }
-  .open-link:hover { text-decoration: underline; }
-  .footer-note { font-size: 12px; color: #aaa; text-align: center; margin-top: 1.5rem; line-height: 1.6; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f4f3f0;
+  --surface: #ffffff;
+  --border: #e8e6e1;
+  --text: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-hint: #aaa;
+  --accent: #1a1a1a;
+  --green: #2d7a4f;
+  --green-bg: #eaf4ee;
+  --amber: #92600a;
+  --amber-bg: #fdf3e3;
+  --red: #a32d2d;
+  --red-bg: #fcebeb;
+  --blue: #1a4ea6;
+  --blue-bg: #e8f0fc;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 380px;
+}
+.login-logo {
+  width: 40px; height: 40px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.login-logo svg { stroke: white; }
+.login-card h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.login-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 2rem; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.04em; }
+.field input {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--text);
+  background: #fafaf8;
+  outline: none; transition: border-color 0.15s;
+}
+.field input:focus { border-color: #999; background: white; }
+.login-btn {
+  width: 100%; padding: 11px;
+  background: var(--accent); color: white;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; margin-top: 8px;
+  transition: opacity 0.15s;
+}
+.login-btn:hover { opacity: 0.85; }
+.login-error {
+  font-size: 12px; color: var(--red);
+  background: var(--red-bg);
+  border-radius: 6px; padding: 8px 12px;
+  margin-top: 12px; display: none;
+}
+
+/* ── DASHBOARD ── */
+#dashboard { display: none; min-height: 100vh; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.topbar-logo {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+}
+.topbar-logo svg { stroke: white; width: 16px; height: 16px; }
+.topbar-name { font-size: 15px; font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-user { font-size: 13px; color: var(--text-secondary); }
+.logout-btn {
+  font-size: 13px; color: var(--text-secondary);
+  background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px;
+  cursor: pointer; transition: background 0.15s;
+}
+.logout-btn:hover { background: var(--bg); }
+
+.main { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 56px); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 1rem;
+}
+.sidebar-section { margin-bottom: 1.5rem; }
+.sidebar-label { font-size: 11px; font-weight: 500; color: var(--text-hint); letter-spacing: 0.08em; padding: 0 8px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--text-secondary);
+  cursor: pointer; transition: background 0.1s, color 0.1s;
+  text-decoration: none;
+}
+.nav-item svg { flex-shrink: 0; opacity: 0.6; }
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+.nav-item.active svg { opacity: 1; }
+
+.stat-mini {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.stat-mini-label { font-size: 11px; color: var(--text-hint); margin-bottom: 4px; }
+.stat-mini-value { font-size: 20px; font-weight: 500; color: var(--text); }
+
+/* ── CONTENT ── */
+.content { padding: 2rem; overflow-y: auto; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.page-header { margin-bottom: 1.5rem; }
+.page-header h2 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--text-secondary); }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.stat-card-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.stat-card-value { font-size: 26px; font-weight: 500; color: var(--text); }
+.stat-card-sub { font-size: 12px; color: var(--text-hint); margin-top: 2px; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.card-title { font-size: 14px; font-weight: 500; margin-bottom: 1rem; }
+
+/* Checklist */
+.checklist { list-style: none; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14px; color: var(--text-secondary);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.checklist li:last-child { border-bottom: none; }
+.check-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--blue-bg); color: var(--blue);
+  font-size: 11px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+
+/* Prompt block */
+.prompt-wrap {
+  background: #f8f8f6;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+}
+.prompt-inner {
+  font-size: 12px; color: #555; line-height: 1.75;
+  max-height: 220px; overflow-y: auto;
+  white-space: pre-wrap; word-break: break-word;
+  margin-bottom: 12px;
+}
+.copy-btn {
+  padding: 9px 18px;
+  background: var(--accent); color: white;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.copy-btn:hover { opacity: 0.82; }
+.copy-btn.ok { background: var(--green); }
+
+/* Open link */
+.open-gh {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: var(--blue);
+  text-decoration: none; padding: 9px 16px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); transition: background 0.1s;
+}
+.open-gh:hover { background: var(--bg); }
+
+/* Risk badges */
+.badge {
+  display: inline-block;
+  font-size: 11px; font-weight: 500;
+  padding: 3px 9px; border-radius: 5px;
+}
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+
+/* Checks flow */
+.check-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.check-row:last-child { border-bottom: none; }
+.check-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.check-row-text { flex: 1; }
+.check-row-text b { font-size: 14px; font-weight: 500; display: block; margin-bottom: 2px; }
+.check-row-text span { font-size: 12px; color: var(--text-secondary); }
+
+/* Disclaimer */
+.disclaimer {
+  font-size: 12px; color: var(--text-hint);
+  border-top: 1px solid var(--border);
+  padding-top: 1rem; margin-top: 1rem;
+  line-height: 1.6;
+}
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="badge">Готов к запуску</div>
-  <h1>Ассистент проверки документов</h1>
-  <p class="subtitle">Проверяет договоры перед подписанием — регламенты, законы РК, риски, итоговая рекомендация.</p>
 
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-text">Нажми <b>«Скопировать промпт»</b> ниже</div>
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-text">Открой <a href="https://claude.ai/projects" target="_blank">claude.ai/projects</a> → создай новый проект</div>
+    <h1>DocCheck</h1>
+    <p>Ассистент проверки документов</p>
+    <div class="field">
+      <label>ЛОГИН</label>
+      <input type="text" id="loginInput" placeholder="Введите логин" />
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-text">Нажми <b>«Edit project instructions»</b> и вставь скопированный текст</div>
+    <div class="field">
+      <label>ПАРОЛЬ</label>
+      <input type="password" id="passInput" placeholder="Введите пароль" onkeydown="if(event.key==='Enter')doLogin()" />
     </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <div class="step-text">Загрузи свои регламенты и шаблоны договоров через <b>«Add content»</b></div>
+    <button class="login-btn" onclick="doLogin()">Войти</button>
+    <div class="login-error" id="loginError">Неверный логин или пароль</div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <span class="topbar-name">DocCheck</span>
     </div>
-    <div class="step">
-      <div class="step-num">5</div>
-      <div class="step-text">Вставь любой договор в чат и напиши <b>«Проверь этот договор»</b></div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbarUser"></span>
+      <button class="logout-btn" onclick="doLogout()">Выйти</button>
     </div>
   </div>
 
-  <div class="prompt-box">
-    <div class="prompt-label">СИСТЕМНЫЙ ПРОМПТ</div>
-    <div class="prompt-text" id="promptText">Ты — ассистент проверки договоров и документов перед подписанием. Работаешь исключительно для личного использования владельца этого проекта.
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">МЕНЮ</div>
+        <div class="nav-item active" onclick="showPage('overview', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Обзор
+        </div>
+        <div class="nav-item" onclick="showPage('setup', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          Настройка
+        </div>
+        <div class="nav-item" onclick="showPage('prompt', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Системный промпт
+        </div>
+        <div class="nav-item" onclick="showPage('checks', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Что проверяет
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">СТАТИСТИКА</div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">Разделов проверки</div>
+          <div class="stat-mini-value">4</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">Законов РК</div>
+          <div class="stat-mini-value">3+</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="page active" id="page-overview">
+        <div class="page-header">
+          <h2>Обзор продукта</h2>
+          <p>Ассистент проверки договоров и документов перед подписанием</p>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-card-label">Итоговых вариантов</div>
+            <div class="stat-card-value">3</div>
+            <div class="stat-card-sub">Подписать / Правки / Юрист</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Разделов анализа</div>
+            <div class="stat-card-value">4</div>
+            <div class="stat-card-sub">Регламенты, РК, Риски, Итог</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Платформа</div>
+            <div class="stat-card-value" style="font-size:18px; padding-top:4px;">Claude</div>
+            <div class="stat-card-sub">Projects / claude.ai</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Итоговая рекомендация</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; align-items:center; gap:12px; padding:10px; background:#f8f8f6; border-radius:8px;">
+              <span style="font-size:20px;">✅</span>
+              <div>
+                <div style="font-size:14px; font-weight:500; color:var(--green);">Можно подписывать</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Существенных нарушений и рисков не выявлено</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:10px; background:#f8f8f6; border-radius:8px;">
+              <span style="font-size:20px;">⚠️</span>
+              <div>
+                <div style="font-size:14px; font-weight:500; color:var(--amber);">Требует правок</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Устранимые нарушения или невыгодные условия</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:10px; background:#f8f8f6; border-radius:8px;">
+              <span style="font-size:20px;">🛑</span>
+              <div>
+                <div style="font-size:14px; font-weight:500; color:var(--red);">Необходима юридическая экспертиза</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Серьёзные нарушения или нестандартные условия</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Быстрый старт</div>
+          <a class="open-gh" href="https://claude.ai/projects" target="_blank">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Открыть claude.ai/projects
+          </a>
+          <p class="disclaimer">Ассистент не является юристом и не заменяет юридическую экспертизу. Для крупных и нестандартных сделок рекомендуется консультация с профессиональным юристом.</p>
+        </div>
+      </div>
+
+      <!-- SETUP -->
+      <div class="page" id="page-setup">
+        <div class="page-header">
+          <h2>Настройка</h2>
+          <p>Как запустить ассистент за 5 шагов</p>
+        </div>
+        <div class="card">
+          <ul class="checklist">
+            <li><div class="check-num">1</div><div>Открой <a href="https://claude.ai/projects" target="_blank" style="color:var(--blue);">claude.ai/projects</a> и нажми <b>New Project</b></div></li>
+            <li><div class="check-num">2</div><div>Перейди в раздел <b>«Системный промпт»</b> этого дашборда и нажми <b>«Скопировать промпт»</b></div></li>
+            <li><div class="check-num">3</div><div>Вставь скопированный текст в поле <b>«Edit project instructions»</b> внутри проекта</div></li>
+            <li><div class="check-num">4</div><div>Загрузи свои регламенты и шаблоны договоров через <b>«Add content»</b> — один раз, навсегда</div></li>
+            <li><div class="check-num">5</div><div>Вставь текст любого договора в чат и напиши: <b>«Проверь этот договор»</b></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PROMPT -->
+      <div class="page" id="page-prompt">
+        <div class="page-header">
+          <h2>Системный промпт</h2>
+          <p>Скопируй и вставь в поле Instructions своего Claude Project</p>
+        </div>
+        <div class="card">
+          <div class="prompt-wrap">
+            <div class="prompt-inner" id="promptText">Ты — ассистент проверки договоров и документов перед подписанием. Работаешь исключительно для личного использования владельца этого проекта.
 
 ## Твоя задача
 
@@ -78,8 +441,6 @@
 
 ## Структура проверки
 
-По каждому полученному документу выдавай заключение строго в следующем формате:
-
 ### 1. Соответствие регламентам компании
 Для каждого выявленного отклонения от внутренних регламентов и шаблонов:
 - Пункт документа: [номер пункта или краткое описание]
@@ -90,7 +451,7 @@
 Если отклонений нет — написать «Соответствует внутренним регламентам».
 
 ### 2. Соответствие законодательству РК
-Проверяй на соответствие: ГК РК, ТК РК, Налоговому кодексу РК, а также иным применимым законам исходя из типа документа. При необходимости используй веб-поиск для уточнения актуальных норм.
+Проверяй на соответствие: ГК РК, ТК РК, Налоговому кодексу РК, а также иным применимым законам исходя из типа документа.
 
 Для каждого выявленного нарушения или риска:
 - Пункт документа: [номер пункта или краткое описание]
@@ -105,51 +466,116 @@
 Перечисли по убыванию серьёзности:
 - [Высокий / Средний / Низкий] риск: [пункт] — [описание риска или проблемы]
 
-Включай: неясные формулировки, односторонние условия, отсутствующие существенные условия, скрытые обязательства, чрезмерные штрафы, нечёткие сроки, потенциальные злоупотребления.
-
 ### 4. Итоговая рекомендация
 
-Выбери одно из трёх:
-
 ✅ Можно подписывать — существенных нарушений и рисков не выявлено.
-
 ⚠️ Требует правок — выявлены устранимые нарушения или невыгодные условия. Список конкретных правок: [перечень].
-
-🛑 Необходима юридическая экспертиза — выявлены серьёзные нарушения законодательства, существенные риски или нестандартные условия, требующие профессионального юриста.
+🛑 Необходима юридическая экспертиза — выявлены серьёзные нарушения законодательства.
 
 ## Правила работы
 
 1. Если тип документа не ясен — уточни у пользователя перед проверкой.
 2. Не придумывай нарушений. Если проблема не найдена — пиши об этом прямо.
-3. Не заменяй юриста: всегда добавляй оговорку о пределах своих возможностей там, где это уместно.
-4. Веб-поиск использовать только для уточнения норм законодательства РК — не для поиска условий из документа.
-5. Если пользователь хочет проверить отдельный пункт — проверяй только его, не переспрашивая.
-6. Отвечай на том языке, на котором написан документ (русский или казахский), если пользователь не указал иное.</div>
-  </div>
+3. Не заменяй юриста: всегда добавляй оговорку о пределах своих возможностей.
+4. Веб-поиск использовать только для уточнения норм законодательства РК.
+5. Если пользователь хочет проверить отдельный пункт — проверяй только его.
+6. Отвечай на том языке, на котором написан документ (русский или казахский).</div>
+            <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Скопировать промпт</button>
+          </div>
+        </div>
+      </div>
 
-  <button class="btn" id="copyBtn" onclick="copyPrompt()">Скопировать промпт</button>
+      <!-- CHECKS -->
+      <div class="page" id="page-checks">
+        <div class="page-header">
+          <h2>Что проверяет ассистент</h2>
+          <p>Четыре раздела анализа по каждому документу</p>
+        </div>
+        <div class="card">
+          <div class="check-row">
+            <div class="check-icon" style="background:var(--blue-bg);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="check-row-text">
+              <b>Соответствие регламентам компании</b>
+              <span>Сверка с внутренними политиками и шаблонами. Обязательные и рекомендательные требования — отдельно.</span>
+            </div>
+            <span class="badge badge-blue">1</span>
+          </div>
+          <div class="check-row">
+            <div class="check-icon" style="background:var(--amber-bg);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="check-row-text">
+              <b>Соответствие законодательству РК</b>
+              <span>ГК РК, ТК РК, Налоговый кодекс. Указывает статью и описание нарушения.</span>
+            </div>
+            <span class="badge badge-amber">2</span>
+          </div>
+          <div class="check-row">
+            <div class="check-icon" style="background:var(--red-bg);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="check-row-text">
+              <b>Риски и неясности</b>
+              <span>Невыгодные условия, скрытые обязательства, нечёткие формулировки — по уровню серьёзности.</span>
+            </div>
+            <span class="badge badge-red">3</span>
+          </div>
+          <div class="check-row">
+            <div class="check-icon" style="background:var(--green-bg);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="check-row-text">
+              <b>Итоговая рекомендация</b>
+              <span>Одно из трёх: можно подписывать, требует правок, нужен юрист.</span>
+            </div>
+            <span class="badge badge-green">4</span>
+          </div>
+        </div>
+      </div>
 
-  <hr class="divider">
-
-  <a class="open-link" href="https://claude.ai/projects" target="_blank">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-    Открыть claude.ai/projects
-  </a>
-
-  <p class="footer-note">Ассистент не является юристом и не заменяет юридическую экспертизу.<br>Для крупных сделок рекомендуется консультация с профессионалом.</p>
-</div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /dashboard -->
 
 <script>
+const CREDENTIALS = { admin: 'berik2024' };
+
+function doLogin() {
+  const login = document.getElementById('loginInput').value.trim();
+  const pass = document.getElementById('passInput').value;
+  if (CREDENTIALS[login] && CREDENTIALS[login] === pass) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('topbarUser').textContent = login;
+    document.getElementById('loginError').style.display = 'none';
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginInput').value = '';
+  document.getElementById('passInput').value = '';
+}
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
 function copyPrompt() {
   const text = document.getElementById('promptText').innerText;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.textContent = 'Скопировано!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'Скопировать промпт';
-      btn.classList.remove('copied');
-    }, 2000);
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Скопировать промпт'; btn.classList.remove('ok'); }, 2000);
   });
 }
 </script>
